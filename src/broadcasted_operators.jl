@@ -16,17 +16,23 @@ backward(node::BroadcastedOperator{typeof(*)}, x, y, g) = let
     tuple(Jx' * g, Jy' * g)
 end
 
+# x .^ n (element-wise exponentiation)
 ^(x::GraphNode, n::Number) = BroadcastedOperator(^, x, n)
 forward(::BroadcastedOperator{typeof(^)}, x, n) = x .^ n
 backward(::BroadcastedOperator{typeof(^)}, x, n, g) = tuple(g .* n .* x .^ (n - 1), nothing)
 
+# relu activation function
 relu(x::GraphNode) = BroadcastedOperator(relu, x)
 forward(::BroadcastedOperator{typeof(relu)}, x) = max.(x, 0)
 backward(::BroadcastedOperator{typeof(relu)}, x, g) = tuple(g .* isless.(x, 0))
 
+
+# flattening the matrix
 flatten(x::GraphNode) = BroadcastedOperator(flatten, x)
 forward(::BroadcastedOperator{typeof(flatten)}, x) = reshape(x, 1, :)
 backward(::BroadcastedOperator{typeof(flatten)}, x, g) = (reshape(g, size(x)),)
+
+
 
 Base.Broadcast.broadcasted(max, x::GraphNode, y::GraphNode) = BroadcastedOperator(max, x, y)
 forward(::BroadcastedOperator{typeof(max)}, x, y) = return max.(x, y)
@@ -36,6 +42,8 @@ backward(::BroadcastedOperator{typeof(max)}, x, y, g) = let
     tuple(Jx' * g, Jy' * g)
 end
 
+
+# element-wise addition
 Base.Broadcast.broadcasted(+, x::GraphNode, y::GraphNode) = BroadcastedOperator(+, x, y)
 forward(::BroadcastedOperator{typeof(+)}, x, y) = return x .+ y
 backward(::BroadcastedOperator{typeof(+)}, x, y, g) = tuple(g, g)

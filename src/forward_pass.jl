@@ -1,3 +1,5 @@
+include("structures.jl")
+
 reset!(node::Constant) = nothing
 reset!(node::Variable) = node.gradient = nothing
 reset!(node::Operator) = node.gradient = nothing
