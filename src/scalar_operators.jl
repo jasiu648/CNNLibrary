@@ -10,6 +10,7 @@ sin(x::GraphNode) = ScalarOperator(sin, x)
 forward(::ScalarOperator{typeof(sin)}, x) = return sin(x)
 backward(::ScalarOperator{typeof(sin)}, x, g) = tuple(g * cos(x))
 
+#=
 +(x::GraphNode, y::GraphNode) = ScalarOperator(+, x, y)
 forward(::ScalarOperator{typeof(+)}, x, y) = x + y
 backward(::ScalarOperator{typeof(+)}, x, y, g) = tuple(g, g)
@@ -17,6 +18,7 @@ backward(::ScalarOperator{typeof(+)}, x, y, g) = tuple(g, g)
 -(x::GraphNode, y::GraphNode) = ScalarOperator(-, x, y)
 forward(::ScalarOperator{typeof(-)}, x, y) = x - y
 backward(::ScalarOperator{typeof(-)}, x, y, g) = tuple(g, -g)
+
 
 *(x::GraphNode, y::GraphNode) = ScalarOperator(*, x, y)
 forward(::ScalarOperator{typeof(*)}, x, y) = x * y
@@ -30,6 +32,8 @@ min(x::GraphNode, y::GraphNode) = ScalarOperator(min, x, y)
 forward(::ScalarOperator{typeof(min)}, x, y) = min(x, y)
 backward(::ScalarOperator{typeof(min)}, x, y, g) = tuple(g * isless(x, y), g * isless(y, x))
 
+
 relu(x::GraphNode) = ScalarOperator(relu, x)
 forward(::ScalarOperator{typeof(relu)}, x) = max(x, 0)
 backward(::ScalarOperator{typeof(relu)}, x, g) = g * isless(0, x)
+=#

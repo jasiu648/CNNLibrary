@@ -1,3 +1,5 @@
+include("structures.jl")
+
 update!(node::Constant, gradient) = nothing
 update!(node::GraphNode, gradient) = if isnothing(node.gradient)
     node.gradient = gradient else node.gradient .+= gradient
