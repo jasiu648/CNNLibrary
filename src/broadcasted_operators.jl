@@ -1,6 +1,7 @@
 import Base: *, max
 import LinearAlgebra: mul!
 using LinearAlgebra
+
 # x * y (aka matrix multiplication)
 *(A::GraphNode, x::GraphNode) = BroadcastedOperator(mul!, A, x)
 forward(::BroadcastedOperator{typeof(mul!)}, A, x) = return A * x
@@ -31,7 +32,6 @@ backward(::BroadcastedOperator{typeof(relu)}, x, g) = tuple(g .* isless.(x, 0))
 flatten(x::GraphNode) = BroadcastedOperator(flatten, x)
 forward(::BroadcastedOperator{typeof(flatten)}, x) = reshape(x, 1, :)
 backward(::BroadcastedOperator{typeof(flatten)}, x, g) = (reshape(g, size(x)),)
-
 
 
 Base.Broadcast.broadcasted(max, x::GraphNode, y::GraphNode) = BroadcastedOperator(max, x, y)

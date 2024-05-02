@@ -18,3 +18,12 @@ function _check_sizes(ŷ::AbstractArray, y::AbstractArray)
     end
   end
   _check_sizes(ŷ, y) = nothing 
+
+function uniform_rand(size, gain, fan_in, fan_out)
+    # Calculate x
+    x = gain * sqrt(6 / (fan_in + fan_out))
+    
+    # Generate random numbers from uniform distribution
+    return rand(Float32, size) .* (2 * x) .- x
+end
+
