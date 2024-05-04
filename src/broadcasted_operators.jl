@@ -1,4 +1,4 @@
-import Base: *, max
+import Base: *, max, sum
 import LinearAlgebra: mul!
 using LinearAlgebra
 
@@ -51,3 +51,12 @@ backward(::BroadcastedOperator{typeof(+)}, x, y, g) = tuple(g, g)
 Base.Broadcast.broadcasted(-, x::GraphNode, y::GraphNode) = BroadcastedOperator(-, x, y)
 forward(::BroadcastedOperator{typeof(-)}, x, y) = return x .- y
 backward(::BroadcastedOperator{typeof(-)}, x, y, g) = tuple(g,-g)
+
+sum(x::GraphNode) = BroadcastedOperator(sum, x)
+forward(::BroadcastedOperator{typeof(sum)}, x) = sum(x)
+backward(::BroadcastedOperator{typeof(sum)}, x, g) =
+    let
+        𝟏 = ones(length(x))
+        J = 𝟏'
+        tuple(J' * g)
+    end

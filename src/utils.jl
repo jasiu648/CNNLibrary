@@ -16,14 +16,15 @@ function _check_sizes(ŷ::AbstractArray, y::AbstractArray)
         "loss function expects size(ŷ) = $(size(ŷ)) to match size(y) = $(size(y))"
       ))
     end
-  end
+end
   _check_sizes(ŷ, y) = nothing 
 
-function uniform_rand(size, gain, fan_in, fan_out)
-    # Calculate x
-    x = gain * sqrt(6 / (fan_in + fan_out))
-    
-    # Generate random numbers from uniform distribution
-    return rand(Float32, size) .* (2 * x) .- x
+
+using Random
+
+function uniform_rand(dims::Integer...; gain::Real=1)
+  scale = Float32(gain) * sqrt(24.0f0 / sum(nfan(dims...)))
+  (rand(Random.default_rng(), Float32, dims...) .- 0.5f0) .* scale
 end
 
+nfan(dims...) = prod(dims[1:end-2]) .* (dims[end-1], dims[end])
