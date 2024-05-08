@@ -28,3 +28,5 @@ function uniform_rand(dims::Integer...; gain::Real=1)
 end
 
 nfan(dims...) = prod(dims[1:end-2]) .* (dims[end-1], dims[end])
+
+

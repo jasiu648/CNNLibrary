@@ -17,8 +17,9 @@ backward(node::BroadcastedOperator{typeof(*)}, x, y, g) = let
     tuple(Jx' * g, Jy' * g)
 end
 
+
 # x .^ n (element-wise exponentiation)
-^(x::GraphNode, n::Number) = BroadcastedOperator(^, x, n)
+^(x::GraphNode, n::GraphNode) = BroadcastedOperator(^, x, n)
 forward(::BroadcastedOperator{typeof(^)}, x, n) = x .^ n
 backward(::BroadcastedOperator{typeof(^)}, x, n, g) = tuple(g .* n .* x .^ (n - 1), nothing)
 
@@ -59,4 +60,20 @@ backward(::BroadcastedOperator{typeof(sum)}, x, g) =
         𝟏 = ones(length(x))
         J = 𝟏'
         tuple(J' * g)
+    end
+
+    
+cross_entropy_loss(y_hat::GraphNode, y::GraphNode) = BroadcastedOperator(cross_entropy_loss, y_hat, y)
+forward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y) =
+    let
+        #y_hat = y_hat .- maximum(y_hat) #normalizacja
+        y_hat = exp.(y_hat) ./ sum(exp.(y_hat))
+        loss = sum(log.(y_hat) .* y) * -1.0
+        return loss
+    end
+backward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y, g) =
+    let
+        y_hat = y_hat .- maximum(y_hat)
+        y_hat = exp.(y_hat) ./ sum(exp.(y_hat))
+        return tuple(g .* (y_hat - y))
     end

@@ -5,7 +5,7 @@ conv(x::GraphNode, w::GraphNode) = BroadcastedOperator(conv, x, w)
 function forward(::BroadcastedOperator{typeof(conv)}, x, w)
  
     # get dimensions
-    (H, W, C, _) = size(x)
+    (H, W, C) = size(x)
     (FH, FW, _, K) = size(w)
 
     # calculate output dimensions
@@ -40,7 +40,7 @@ end
 function backward(::BroadcastedOperator{typeof(conv)}, x, w, g)
 
     # get dimensions
-    (H, W, C, _) = size(x)
+    (H, W, C) = size(x)
     (FH, FW, _, K) = size(w)
 
     # calculate output dimensions

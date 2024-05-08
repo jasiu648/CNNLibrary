@@ -30,13 +30,16 @@ function backward(::BroadcastedOperator{typeof(maxpool)}, x, g)
     output_height = div(output_height, 2)
     output_width = div(output_width, 2)
 
+    grads = vcat(g...)
+    iter = 1
     for c in 1:layers
         for j in 1:output_height
             for i in 1:output_width
                 region = x[2*j-1:2*j, 2*i-1:2*i,c]
                 max_value = maximum(region)
                 idx = findfirst(isequal(max_value), region)
-                y[2*j-2 + idx[1],2*i-2 + idx[2], c] = 1
+                y[2*j-2 + idx[1],2*i-2 + idx[2], c] = grads[iter]
+                iter += 1
             end
         end
     end
