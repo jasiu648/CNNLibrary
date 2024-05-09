@@ -1,6 +1,7 @@
 import Base: *, max, sum
 import LinearAlgebra: mul!
 using LinearAlgebra
+include("structures.jl")
 
 # x * y (aka matrix multiplication)
 *(A::GraphNode, x::GraphNode) = BroadcastedOperator(mul!, A, x)
@@ -31,8 +32,7 @@ backward(::BroadcastedOperator{typeof(relu)}, x, g) = tuple(g .* isless.(x, 0))
 # flattening the matrix
 flatten(x::GraphNode) = BroadcastedOperator(flatten, x)
 forward(::BroadcastedOperator{typeof(flatten)}, x) = reshape(x, 1, :)
-backward(::BroadcastedOperator{typeof(flatten)}, x, g) = (reshape(g, size(x)),)
-
+backward(::BroadcastedOperator{typeof(flatten)}, x, g) = tuple(reshape(g, size(x)))
 
 Base.Broadcast.broadcasted(max, x::GraphNode, y::GraphNode) = BroadcastedOperator(max, x, y)
 forward(::BroadcastedOperator{typeof(max)}, x, y) = return max.(x, y)

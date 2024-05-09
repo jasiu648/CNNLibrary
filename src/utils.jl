@@ -34,3 +34,9 @@ function init_kernel(n_input::Int64, n_output::Int64; kernel_size = 3)
   return stddev .- rand(kernel_size, kernel_size, n_input, n_output) * stddev * 2
 end
 
+function xavier_glorot_init(in_channels, out_channels, kernel_size)
+  fan_in = in_channels * kernel_size^2
+  fan_out = out_channels * kernel_size^2
+  limit = sqrt(6 / (fan_in + fan_out))
+  return limit * randn(kernel_size, kernel_size, in_channels, out_channels)
+end

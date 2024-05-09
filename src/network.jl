@@ -4,7 +4,7 @@ include("utils.jl");
 include("convolution.jl");
 include("graph_building.jl");
 include("load_data.jl");
-#include("scalar_operators.jl");
+include("scalar_operators.jl");
 include("broadcasted_operators.jl")
 include("maxpool.jl")
 #=
@@ -27,17 +27,16 @@ function update_weights!(graph::Vector, lr::Float64, batch_size::Int64)
     end
 end
 
-function train_model(model, x_train,y_train,batchsize,learning_rate)
+function train_model(model, x_train, y_train, batchsize, learning_rate)
 
-    data_count = size(x_train, 4)
-    data_count = 60000
+    data_size = size(x_train, 4)
     epochs = 3
-
-    @time for epoch = 1:epochs
-        
+    
+    for epoch in 1:epochs
+         
         epoch_loss = 0.0
         
-        for i = 1:data_count
+        @time for i = 1:data_size
             x = x_train[:,:,:, i]
             y = reshape(y_train[:, i],1,10)
 
@@ -48,11 +47,11 @@ function train_model(model, x_train,y_train,batchsize,learning_rate)
 
             backward!(model)
 
-            if i % 100 == 0
+            if i % batchsize == 0
                 update_weights!(model, learning_rate, batchsize)
             end
         end
-        print("Epoch loss: ", epoch_loss / data_count)
+        println("Epoch loss: ", epoch_loss / data_size)
     end
 end
 
@@ -85,10 +84,6 @@ function conv(w, x, activation)
 	return activation(out)
 end
 
-function mean_squared_loss(y, ŷ)
-    return Constant(0.1) .* sum((y .- ŷ))
-end
-
 dense(w, b, x, activation) = activation((x * w) .+ b)
 dense(w, x, activation) = activation((x * w))
 dense(w, x) = x * w
@@ -97,7 +92,6 @@ dense(w, x) = x * w
 function build_graph()
     
     input_size = 28
-	kernel_size = 3
 	input_channels = 1
 	out_channels = 6
 
@@ -126,4 +120,52 @@ function build_graph()
     x6.name = "x6"
     
     return topological_sort(x6)
+end
+
+function build_graph_advanced()
+    
+    input_size = 28
+	input_channels = 1
+	out_channels = 6
+
+    x = Constant(uniform_rand(input_size, input_size, input_channels, 1))
+    wh1 = Variable(init_kernel(input_channels, out_channels), name = "wh1")
+    wh2 = Variable(init_kernel(6, 16), name = "wh2")
+    wh3 = Variable(randn(400, 84), name = "wh3")
+    wo = Variable(randn(84, 10), name = "wo")
+
+    b1
+    b2
+    b3
+    b4
+
+    y = Constant(randn(1,10))
+
+    x1 = conv(wh1, x, relu)
+    x1.name = "x1"
+  
+    x2 = maxpool(x1)
+    x2.name = "x2"
+
+    x3 = conv(wh2, x2, relu)
+    x3.name = "x3"
+
+    x4 = maxpool(x3)
+    x4.name = "x4"
+
+    x5 = flatten(x4)
+    x5.name = "x5"
+    
+    x6 = dense(wh2, x3, relu)
+    x6.name = "x4"
+
+    x7 = dense(wo, x6)
+    x7.name = "x7"
+
+    x8 = cross_entropy_loss(x7, y)
+    x8.name = "x8"
+    
+    return topological_sort(x6)
+
+
 end
