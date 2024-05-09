@@ -44,5 +44,5 @@ function backward(::BroadcastedOperator{typeof(maxpool)}, x, g)
         end
     end
     
-    return y
+    return tuple(y)
 end

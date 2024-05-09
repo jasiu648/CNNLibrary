@@ -28,7 +28,6 @@ relu(x::GraphNode) = BroadcastedOperator(relu, x)
 forward(::BroadcastedOperator{typeof(relu)}, x) = max.(x, 0)
 backward(::BroadcastedOperator{typeof(relu)}, x, g) = tuple(g .* isless.(x, 0))
 
-
 # flattening the matrix
 flatten(x::GraphNode) = BroadcastedOperator(flatten, x)
 forward(::BroadcastedOperator{typeof(flatten)}, x) = reshape(x, 1, :)
@@ -66,7 +65,13 @@ backward(::BroadcastedOperator{typeof(sum)}, x, g) =
 cross_entropy_loss(y_hat::GraphNode, y::GraphNode) = BroadcastedOperator(cross_entropy_loss, y_hat, y)
 forward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y) =
     let
-        #y_hat = y_hat .- maximum(y_hat) #normalizacja
+        global data_count
+        global accurate
+        data_count += 1
+        if argmax(y_hat) == argmax(y)
+            accurate += 1
+        end
+        y_hat = y_hat .- maximum(y_hat) #normalizacja
         y_hat = exp.(y_hat) ./ sum(exp.(y_hat))
         loss = sum(log.(y_hat) .* y) * -1.0
         return loss

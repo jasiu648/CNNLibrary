@@ -1,8 +1,17 @@
 include("structures.jl")
 
 update!(node::Constant, gradient) = nothing
-update!(node::GraphNode, gradient) = if isnothing(node.gradient)
-    node.gradient = gradient else node.gradient .+= gradient
+update!(node::GraphNode, gradient) = begin
+    
+    node.gradient = gradient
+
+    if typeof(node) == Variable
+        if isnothing(node.accumulated_gradient)
+            node.accumulated_gradient = gradient * 0
+        else
+            node.accumulated_gradient .+= gradient
+        end
+    end
 end
 
 function backward!(order::Vector; seed=1.0)

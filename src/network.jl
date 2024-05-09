@@ -19,41 +19,60 @@ net = Chain(
 
 function update_weights!(graph::Vector, lr::Float64, batch_size::Int64)
     for node in graph
-        if isa(node, Variable) && !isnothing(node.gradient)
-              node.gradient ./= batch_size
-              node.output -= lr * node.gradient
-              node.gradient .= 0
+        if isa(node, Variable) && hasproperty(node, :accumulated_gradient)
+              node.accumulated_gradient ./= batch_size
+              node.output -= lr * node.accumulated_gradient
+              node.accumulated_gradient .= 0
        end
     end
 end
 
 function train_model(model, x_train,y_train,batchsize,learning_rate)
 
-    for i = 1:100
-    #for i = 1:size(x_train, 4)
-        x = x_train[:,:,:, i]
-        y = reshape(y_train[:, i],1,10)
+    data_count = size(x_train, 4)
+    data_count = 60000
+    epochs = 3
 
-        model[1] = Constant(x)
-        model[12] = Constant(y)
+    @time for epoch = 1:epochs
+        
+        epoch_loss = 0.0
+        
+        for i = 1:data_count
+            x = x_train[:,:,:, i]
+            y = reshape(y_train[:, i],1,10)
 
-        forward!(model)
-        backward!(model)
-        if i % batchsize == 0
-            update_weights!(model, learning_rate, batchsize)
+            model[3].inputs = (Constant(x), model[3].inputs[2])
+            model[13].inputs = (model[13].inputs[1],Constant(y))
+
+            epoch_loss += forward!(model)
+
+            backward!(model)
+
+            if i % 100 == 0
+                update_weights!(model, learning_rate, batchsize)
+            end
         end
+        print("Epoch loss: ", epoch_loss / data_count)
     end
-
 end
 
-function test_model(x, y)
+function test_model(model, x_test, y_test)
 
-    for i=1:size(x_data, 4)
-        x = Constant(x_data[:, :, i])
-        y = Constant(y_data[i, :])
-        graph = build_graph(x, y, cnn)
-		forward!(graph)
+    global accurate
+    global data_count
+    accurate = 0
+    data_count = 0
+
+    for i = 1:40000
+        x = x_test[:,:,:, i]
+        y = reshape(y_test[:, i],1,10)
+
+        model[3].inputs = (Constant(x), model[3].inputs[2])
+        model[13].inputs = (model[13].inputs[1],Constant(y))
+
+        forward!(model)
     end
+    println("ACCURACY: ", accurate/data_count)
 end
 
 function conv(w, b, x, activation)
@@ -83,16 +102,10 @@ function build_graph()
 	out_channels = 6
 
     x = Constant(uniform_rand(input_size, input_size, input_channels, 1))
-    wh1 = Variable(uniform_rand(kernel_size, kernel_size, input_channels, out_channels), name = "wh1")
+    wh1 = Variable(init_kernel(input_channels, out_channels), name = "wh1")
     wh2 = Variable(randn(13*13*6, 84), name = "wh2")
     wo = Variable(randn(84, 10), name = "wo")
     y = Constant(randn(1,10))
-    
-    print(size(x.output))
-    print(size(wh1.output))
-    print(size(wh2.output))
-    print(size(wo.output))
-    print(size(y.output))
 
     x1 = conv(wh1, x, relu)
     x1.name = "x1"

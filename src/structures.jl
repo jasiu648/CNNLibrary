@@ -9,7 +9,8 @@ mutable struct Variable <: GraphNode
     output :: Any
     gradient :: Any
     name :: String
-    Variable(output; name="?") = new(output, nothing, name)
+    accumulated_gradient :: Any
+    Variable(output; name="?") = new(output, nothing, name, nothing)
 end
 
 mutable struct ScalarOperator{F} <: Operator

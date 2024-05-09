@@ -29,4 +29,8 @@ end
 
 nfan(dims...) = prod(dims[1:end-2]) .* (dims[end-1], dims[end])
 
+function init_kernel(n_input::Int64, n_output::Int64; kernel_size = 3)
+  stddev = sqrt(1 / (n_input * 9))
+  return stddev .- rand(kernel_size, kernel_size, n_input, n_output) * stddev * 2
+end
 
