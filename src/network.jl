@@ -94,9 +94,10 @@ function build_graph()
     input_size = 28
 	input_channels = 1
 	out_channels = 6
+    kernel_size = 3
 
     x = Constant(uniform_rand(input_size, input_size, input_channels, 1))
-    wh1 = Variable(init_kernel(input_channels, out_channels), name = "wh1")
+    wh1 = Variable(xavier_glorot_init(input_channels, out_channels, kernel_size), name = "wh1")
     wh2 = Variable(randn(13*13*6, 84), name = "wh2")
     wo = Variable(randn(84, 10), name = "wo")
     y = Constant(randn(1,10))
