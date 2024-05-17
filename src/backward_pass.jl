@@ -1,19 +1,29 @@
 include("structures.jl")
 
 update!(node::Constant, gradient) = nothing
+#=
 update!(node::GraphNode, gradient) = begin
-    
-    node.gradient = gradient
-
     if typeof(node) == Variable
-        if isnothing(node.accumulated_gradient)
-            node.accumulated_gradient = gradient * 0
+        if isnothing(node.gradient)
+            node.gradient = gradient
         else
-            node.accumulated_gradient .+= gradient
+            node.gradient .+= gradient
+        end
+        return
+    end
+    node.gradient = gradient
+end
+=#
+update!(node::GraphNode, gradient) = begin
+    node.gradient = gradient
+    if typeof(node) == Variable
+        if isnothing(node.__gradient)
+            node.__gradient = gradient * 0
+        else
+            node.__gradient .+= gradient
         end
     end
 end
-
 function backward!(order::Vector; seed=1.0)
     result = last(order)
     result.gradient = seed
@@ -21,7 +31,6 @@ function backward!(order::Vector; seed=1.0)
     for node in reverse(order)
         backward!(node)
     end
-    return nothing
 end
 
 function backward!(node::Constant) end

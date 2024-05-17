@@ -1,48 +1,34 @@
 include("structures.jl")
 
 maxpool(x::GraphNode) = BroadcastedOperator(maxpool, x)
+forward(node::BroadcastedOperator{typeof(maxpool)}, x) =
+    let
+        input_height, input_width, layers = size(x)
 
-function forward(::BroadcastedOperator{typeof(maxpool)}, x)
+        output_height = div(input_height, 2)
+        output_width = div(input_width, 2)
 
-    input_height, input_width, layers = size(x)
+        y = zeros(output_height, output_width, layers)
+        indexes = CartesianIndex{3}[]
+        for c in 1:layers
+            for j in 1:output_height
+                for i in 1:output_width
+                    value, ids = findmax(@view x[2*j-1:2*j, 2*i-1:2*i, c])
+                    y[j, i, c] = value
 
-    output_height = div(input_height, 2)
-    output_width = div(input_width, 2)
-
-    y = zeros(output_height, output_width, layers)
-    for c in 1:layers
-        for j in 1:output_height
-            for i in 1:output_width
-                region = x[2*j - 1:2*j, 2*i - 1:i *2, c]
-                y[j, i, c] = maximum(region)
+                    ids, idy = ids[1] + 2 * j - 1 - 1, ids[2] + 2 * i - 1 - 1
+                    push!(indexes, CartesianIndex(ids, idy, c))
+                end
             end
         end
+        node.cache = indexes
+        return y
     end
-    
-    return y
-end
 
-function backward(::BroadcastedOperator{typeof(maxpool)}, x, g)
-    
-    output_height, output_width, layers = size(x)
-    y = zeros(output_height, output_width, layers)
-    
-    output_height = div(output_height, 2)
-    output_width = div(output_width, 2)
-
-    grads = vcat(g...)
-    iter = 1
-    for c in 1:layers
-        for j in 1:output_height
-            for i in 1:output_width
-                region = x[2*j-1:2*j, 2*i-1:2*i,c]
-                max_value = maximum(region)
-                idx = findfirst(isequal(max_value), region)
-                y[2*j-2 + idx[1],2*i-2 + idx[2], c] = grads[iter]
-                iter += 1
-            end
-        end
+backward(node::BroadcastedOperator{typeof(maxpool)}, x, g) =
+    let
+        output = zeros(size(x))
+        output[node.cache] = vcat(g...)
+        tuple(output)
     end
-    
-    return tuple(y)
-end
+

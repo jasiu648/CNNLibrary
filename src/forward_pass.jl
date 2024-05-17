@@ -1,6 +1,6 @@
 include("structures.jl")
 
-reset!(node::GraphNode) = nothing
+reset!(node::Constant) = nothing
 reset!(node::Variable) = node.gradient = nothing
 reset!(node::Operator) = node.gradient = nothing
 

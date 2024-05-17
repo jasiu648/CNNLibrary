@@ -23,7 +23,7 @@ end
 using Random
 
 function uniform_rand(dims::Integer...; gain::Real=1)
-  scale = Float32(gain) * sqrt(24.0f0 / sum(nfan(dims...)))
+  scale = Float32(gain) * sqrt(6 / sum(nfan(dims...)))
   (rand(Random.default_rng(), Float32, dims...) .- 0.5f0) .* scale
 end
 

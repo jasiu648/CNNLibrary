@@ -9,7 +9,7 @@ mutable struct Variable <: GraphNode
     output :: Any
     gradient :: Any
     name :: String
-    accumulated_gradient :: Any
+    __gradient::Any
     Variable(output; name="?") = new(output, nothing, name, nothing)
 end
 
@@ -26,7 +26,8 @@ mutable struct BroadcastedOperator{F} <: Operator
     output :: Any
     gradient :: Any
     name :: String
-    BroadcastedOperator(fun, inputs...; name="?") = new{typeof(fun)}(inputs, nothing, nothing, name)
+    cache::Any
+    BroadcastedOperator(fun, inputs...; name="?") = new{typeof(fun)}(inputs, nothing, nothing, name, nothing)
 end
 
 import Base: show, summary
