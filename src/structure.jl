@@ -1,33 +1,45 @@
 abstract type GraphNode end
 abstract type Operator <: GraphNode end
 
-struct Constant{T} <: GraphNode
+mutable struct Constant{T} <: GraphNode
     output :: T
 end
 
 mutable struct Variable <: GraphNode
     output :: Any
     gradient :: Any
-    name :: String
-    __gradient::Any
-    Variable(output; name="?") = new(output, nothing, name, nothing)
+    name::String
+    Variable(output; name = "?") = new(output, nothing, name)
 end
 
 mutable struct ScalarOperator{F} <: Operator
     inputs :: Any
     output :: Any
     gradient :: Any
-    name :: String
-    ScalarOperator(fun, inputs...; name="?") = new{typeof(fun)}(inputs, nothing, nothing, name)
+    name::String
+    function ScalarOperator(fun, inputs...; name = "?")
+		return new{typeof(fun)}(inputs, nothing, nothing, name)
+	end
 end
 
 mutable struct BroadcastedOperator{F} <: Operator
     inputs :: Any
     output :: Any
     gradient :: Any
-    name :: String
+    name::String
     cache::Any
-    BroadcastedOperator(fun, inputs...; name="?") = new{typeof(fun)}(inputs, nothing, nothing, name, nothing)
+    function BroadcastedOperator(fun, inputs...; name = "?")
+       return new{typeof(fun)}(inputs, nothing, nothing, name, nothing) 
+    end
+end
+
+
+mutable struct ModelCNN
+    graph :: Vector{GraphNode}
+    input_data:: Any
+    label:: Any
+    output:: Any
+
 end
 
 import Base: show, summary
