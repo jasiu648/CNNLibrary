@@ -1,4 +1,4 @@
-include("structure.jl")
+include("structures.jl")
 
 function visit(node::GraphNode, visited, order)
     if node ∈ visited

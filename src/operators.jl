@@ -1,10 +1,10 @@
-include("structure.jl")
+include("structures.jl")
 import Base: ^, sin, sum, *, +, -, max, reshape
 import LinearAlgebra: mul!, diagm
 using Tullio
 
 relu(x::GraphNode) = BroadcastedOperator(relu, x)
-forward(::BroadcastedOperator{typeof(relu)}, x) = return max.(x, zero(x))
+forward(::BroadcastedOperator{typeof(relu)}, x) = return (x .> 0) .* x
 backward(::BroadcastedOperator{typeof(relu)}, x, g) = return tuple(g .* (x .> 0))
 
 flatten(x::GraphNode) = BroadcastedOperator(flatten, x)
@@ -18,7 +18,7 @@ forward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y) =
     end
 backward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y, g) =
     let
-        y_hat = y_hat .- maximum(y_hat)
+        #y_hat = y_hat .- maximum(y_hat)
         y_hat = exp.(y_hat) ./ sum(exp.(y_hat))
         return tuple(g .* (y_hat - y))
     end

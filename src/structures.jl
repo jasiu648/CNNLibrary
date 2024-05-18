@@ -34,11 +34,11 @@ mutable struct BroadcastedOperator{F} <: Operator
 end
 
 
-mutable struct ModelCNN
+mutable struct ModelCNN{F}
     graph :: Vector{GraphNode}
-    input_data:: Any
-    label:: Any
-    output:: Any
+    input_data:: Constant{Array{Float64, 3}}
+    label:: Constant{Vector{Float64}}
+    output:: BroadcastedOperator{F}
 
 end
 

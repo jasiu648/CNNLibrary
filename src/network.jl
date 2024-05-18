@@ -1,5 +1,5 @@
 using Statistics
-include("structure.jl")
+include("structures.jl")
 include("operators.jl")
 include("graph_operations.jl")
 include("utils.jl")
@@ -22,6 +22,7 @@ function initialize_model()
     graph, input_data, label, output = build_graph(wk,wh,wo)
     return ModelCNN(graph, input_data, label, output)
 end
+
 
 function build_graph(weights_kernel::Variable, weights_hidden::Variable, weights_output::Variable)
 
