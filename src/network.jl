@@ -16,13 +16,12 @@ function update_weights!(graph::Vector, lr::Float64, batch_size::Int64)
 end
 
 function initialize_model()
-    wk = Variable(init_kernel(1, 6))
-    wh =  Variable(randn(84, 13*13*6), name = "wh")
-    wo = Variable(randn(10, 84), name = "wo")
+    wk = Variable(uniform_rand(3,3,1, 6))
+    wh =  Variable(uniform_rand(84,1014), name = "wh")
+    wo = Variable(uniform_rand(10, 84), name = "wo")
     graph, input_data, label, output = build_graph(wk,wh,wo)
     return ModelCNN(graph, input_data, label, output)
 end
-
 
 function build_graph(weights_kernel::Variable, weights_hidden::Variable, weights_output::Variable)
 

@@ -12,16 +12,6 @@ mutable struct Variable <: GraphNode
     Variable(output; name = "?") = new(output, nothing, name)
 end
 
-mutable struct ScalarOperator{F} <: Operator
-    inputs :: Any
-    output :: Any
-    gradient :: Any
-    name::String
-    function ScalarOperator(fun, inputs...; name = "?")
-		return new{typeof(fun)}(inputs, nothing, nothing, name)
-	end
-end
-
 mutable struct BroadcastedOperator{F} <: Operator
     inputs :: Any
     output :: Any
@@ -43,7 +33,6 @@ mutable struct ModelCNN{F}
 end
 
 import Base: show, summary
-show(io::IO, x::ScalarOperator{F}) where {F} = print(io, "op ", x.name, "(", F, ")");
 show(io::IO, x::BroadcastedOperator{F}) where {F} = print(io, "op.", x.name, "(", F, ")");
 show(io::IO, x::Constant) = print(io, "const ", x.output)
 show(io::IO, x::Variable) = begin
