@@ -84,7 +84,6 @@ forward(node::BroadcastedOperator{typeof(maxpool)}, x) =
         node.cache = indices
         return output
     end
-
 backward(node::BroadcastedOperator{typeof(maxpool)}, x, g) =
     let
         output = zeros(size(x))

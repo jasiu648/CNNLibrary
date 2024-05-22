@@ -1,5 +1,7 @@
 include("structures.jl")
 
+
+# Building graph
 function visit(node::GraphNode, visited, order)
     if node ∈ visited
     else
@@ -28,6 +30,8 @@ function topological_sort(head::GraphNode)
     return order
 end
 
+
+# Updating gradient
 update!(node::Constant, gradient) = nothing
 
 update!(node::GraphNode, gradient) = begin
@@ -44,6 +48,7 @@ update!(node::GraphNode, gradient) = begin
 end
 
 
+# Backward pass
 function backward!(order::Vector; seed=1.0)
     result = last(order)
     result.gradient = seed
@@ -65,6 +70,8 @@ function backward!(node::Operator)
     return nothing
 end
 
+
+# Forward pass
 compute!(node::Constant) = nothing
 compute!(node::Variable) = nothing
 compute!(node::Operator) =
