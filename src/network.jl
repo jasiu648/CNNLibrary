@@ -36,24 +36,33 @@ function build_graph(weights_kernel::Variable, weights_hidden::Variable, weights
 end
 
 function train_model(model::ModelCNN, trainx::Any, trainy::Any, settings::Any)
+    
     train_size = size(trainx, 4)
 
-    @time for epoch in 1:settings.epochs
-
+    for epoch in 1:settings.epochs
+        
         epoch_loss = 0.0
-        accurate = 0
-
         @time for i=1:train_size
             model.input_data.output = trainx[:, :, :, i]
             model.label.output = trainy[i, :]
             
             epoch_loss += forward!(model.graph)
-            accurate += argmax(model.label.output) == argmax(model.output.output)
             backward!(model.graph)
             if i % settings.batchsize == 0
                 update_weights!(model.graph, settings.eta, settings.batchsize)
             end
         end
+
+        accurate = 0
+
+        # Testing after one dataset iteration, not counted in speed time
+        for i=1:train_size
+            model.input_data.output = trainx[:, :, :, i]
+            model.label.output = trainy[i, :]
+            forward!(model.graph)
+            accurate += argmax(model.label.output) == argmax(model.output.output)
+        end
+
         println("Epoch:", epoch)
         println("Train accuracy: ", accurate / train_size)
         println("Epoch loss: ", epoch_loss / train_size, "\n")

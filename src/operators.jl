@@ -18,7 +18,6 @@ forward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y) =
     end
 backward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y, g) =
     let
-        #y_hat = y_hat .- maximum(y_hat)
         y_hat = exp.(y_hat) ./ sum(exp.(y_hat))
         return tuple(g .* (y_hat - y))
     end
@@ -50,7 +49,7 @@ backward(::BroadcastedOperator{typeof(convolution)}, x, w, g) =
     
         gw = zeros(size(w))
 
-        @tullio gw[fx, fy, c, k] += x[i+fx-1, j+fy-1, c] * g[i, j, k, 1] (i in 1:out_h, j in 1:out_w, fx in 1:FH, fy in 1:FW, c in 1:C, k in 1:K)
+        @tullio gw[dx, dy, c, k] += x[i+dx-1, j+dy-1, c] * g[i, j, k, 1] (i in 1:out_h, j in 1:out_w, dx in 1:FH, dy in 1:FW, c in 1:C, k in 1:K)
         return tuple(nothing, gw)
     end
 
@@ -67,13 +66,15 @@ maxpool(x::GraphNode) = BroadcastedOperator(maxpool, x)
 forward(node::BroadcastedOperator{typeof(maxpool)}, x) =
     let
         h, w, c = size(x)
-        output = zeros(h ÷ 2, w ÷ 2, c)
+        out_h = div(h,2)
+        out_w = div(w,2)
+        output = zeros(out_h, out_w, c)
         indices = CartesianIndex{3}[]
         for i = 1:c
-            for j = 1:h÷2
-                for k = 1:w÷2
-                    val, ids = findmax(@view x[2*j-1:2*j, 2*k-1:2*k, i])
-                    output[j, k, i] = val
+            for j = 1:out_h
+                for k = 1:out_w
+                    value, ids = findmax(@view x[2*j-1:2*j, 2*k-1:2*k, i])
+                    output[j, k, i] = value
 
                     idx, idy = ids[1] + 2 * j - 1 - 1, ids[2] + 2 * k - 1 - 1
                     push!(indices, CartesianIndex(idx, idy, i))
