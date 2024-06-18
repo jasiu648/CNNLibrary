@@ -14,12 +14,22 @@ function update_weights!(graph::Vector, lr::Float64, batch_size::Int64)
         end
     end
 end
-
+#=
 function initialize_model()
     wk = Variable(uniform_rand(3,3,1, 6))
     wh =  Variable(uniform_rand(84,1014), name = "wh")
     wo = Variable(uniform_rand(10, 84), name = "wo")
     graph, input_data, label, output = build_graph(wk,wh,wo)
+    return ModelCNN(graph, input_data, label, output)
+end
+
+function initialize_model2()
+    wk1 = Variable(uniform_rand(3,3,1, 6))
+    wk2 = Variable(uniform_rand(3,3,6,16))
+    wh =  Variable(uniform_rand(84,400))
+    wo = Variable(uniform_rand(10, 84))
+    
+    graph, input_data, label, output = build_graph2(wk1,wk2,wh,wo)
     return ModelCNN(graph, input_data, label, output)
 end
 
@@ -35,6 +45,18 @@ function build_graph(weights_kernel::Variable, weights_hidden::Variable, weights
 	return topological_sort(e), x, y, x3
 end
 
+function build_graph2(weights_kernel::Variable,weights_kernel2::Variable, weights_hidden::Variable, weights_output::Variable)
+    x = Constant(rand(28,28,1))
+    y = Constant(rand(10))
+    bd2 = Variable(zeros(10,1))
+    x1 = convolution(x, weights_kernel) |> relu |> maxpool
+    x2 = convolution(x1, weights_kernel2) |> relu |> maxpool |> flatten
+    x3 = dense(x2, weights_hidden) |> relu
+	x4 = dense(x3, weights_output,bd2)
+	e = cross_entropy_loss(x4, y)
+    return topological_sort(e), x, y, x4
+end
+=#
 function train_model(model::ModelCNN, trainx::Any, trainy::Any, settings::Any)
     
     train_size = size(trainx, 4)
@@ -43,8 +65,8 @@ function train_model(model::ModelCNN, trainx::Any, trainy::Any, settings::Any)
         
         epoch_loss = 0.0
         @time for i=1:train_size
-            model.input_data.output = trainx[:, :, :, i]
-            model.label.output = trainy[i, :]
+            @inbounds model.input_data.output = trainx[:, :, :, i]
+            @inbounds model.label.output = trainy[i, :]
             
             epoch_loss += forward!(model.graph)
             backward!(model.graph)
@@ -57,8 +79,8 @@ function train_model(model::ModelCNN, trainx::Any, trainy::Any, settings::Any)
 
         # Testing after one dataset iteration, not counted in speed time
         for i=1:train_size
-            model.input_data.output = trainx[:, :, :, i]
-            model.label.output = trainy[i, :]
+            @inbounds model.input_data.output = trainx[:, :, :, i]
+            @inbounds model.label.output = trainy[i, :]
             forward!(model.graph)
             accurate += argmax(model.label.output) == argmax(model.output.output)
         end

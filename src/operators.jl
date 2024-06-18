@@ -25,7 +25,7 @@ backward(::BroadcastedOperator{typeof(cross_entropy_loss)}, y_hat, y, g) =
 convolution(x::GraphNode, kernel::GraphNode) = BroadcastedOperator(convolution, x, kernel)
 forward(::BroadcastedOperator{typeof(convolution)}, x, w) =
     let
-        (H, W, C) = size(x)
+    (H, W, C) = size(x)
 
     (FH, FW, _, K) = size(w)
 
@@ -48,9 +48,11 @@ backward(::BroadcastedOperator{typeof(convolution)}, x, w, g) =
         out_w = W - FW + 1
     
         gw = zeros(size(w))
+        gx = zeros(size(x))
 
+        @tullio gx[i+fx-1, j+fy-1, c] += w[fx, fy, c, k] * g[i, j, k, 1] (i in 1:out_h, j in 1:out_w, fx in 1:FH, fy in 1:FW, c in 1:C, k in 1:K)
         @tullio gw[dx, dy, c, k] += x[i+dx-1, j+dy-1, c] * g[i, j, k, 1] (i in 1:out_h, j in 1:out_w, dx in 1:FH, dy in 1:FW, c in 1:C, k in 1:K)
-        return tuple(nothing, gw)
+        return tuple(gx, gw)
     end
 
 dense(x::GraphNode, w::GraphNode) = BroadcastedOperator(dense, x, w)
@@ -59,6 +61,14 @@ forward(::BroadcastedOperator{typeof(dense)}, x, w) = let
 end
 backward(::BroadcastedOperator{typeof(dense)}, x, w, g) = let
     tuple(w' * g, g * x')
+end
+
+dense(x::GraphNode, w::GraphNode, b::GraphNode) = BroadcastedOperator(dense, x, w, b)
+forward(::BroadcastedOperator{typeof(dense)}, x, w, b) = let
+    return 0 .+ w*x
+end
+backward(::BroadcastedOperator{typeof(dense)}, x, w, b, g) = let
+    tuple(w' * g, g * x', g)
 end
     
 
