@@ -5,7 +5,7 @@ include("graph_operations.jl")
 abstract type Layer end
 
 mutable struct ConvLayer <: Layer
-    weights :: Any
+    weights :: Variable
     bias :: Any
     function ConvLayer(dims::Integer...; bias::Bool = false, weights_init::Function = uniform_rand)
         weights = Variable(weights_init(dims...))
@@ -14,12 +14,12 @@ mutable struct ConvLayer <: Layer
 end
 
 mutable struct DenseLayer <: Layer
-    weights :: Any
+    weights :: Variable
     bias :: Any
     function DenseLayer(dims::Integer...; bias::Bool = false, weights_init::Function = uniform_rand)
         weights = Variable(weights_init(dims...))
             if bias
-                new(weights, Variable(zeros(dims[1],1)))
+                new(weights, Variable(uniform_rand(dims[1],1)))
             else
                 new(weights,nothing)
             end
@@ -27,6 +27,10 @@ mutable struct DenseLayer <: Layer
 end
 
 mutable struct MaxPoolLayer <: Layer
+    window :: Constant
+    function MaxPoolLayer(window :: Tuple{Int, Int})
+        new(Constant(window))
+    end
 end
 
 mutable struct FlattenLayer <: Layer
@@ -52,7 +56,7 @@ function CreateOperator(layer::DenseLayer, input)
 end
 
 function CreateOperator(layer::MaxPoolLayer, input)
-    return maxpool(input)  # Add dims 
+    return maxpool(input, layer.window)  # Add dims 
 end
 
 function CreateOperator(layer::ReLULayer, input)

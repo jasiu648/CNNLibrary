@@ -65,7 +65,7 @@ end
 
 dense(x::GraphNode, w::GraphNode, b::GraphNode) = BroadcastedOperator(dense, x, w, b)
 forward(::BroadcastedOperator{typeof(dense)}, x, w, b) = let
-    return 0 .+ w*x
+    return b .+ w*x
 end
 backward(::BroadcastedOperator{typeof(dense)}, x, w, b, g) = let
     tuple(w' * g, g * x', g)
@@ -99,4 +99,38 @@ backward(node::BroadcastedOperator{typeof(maxpool)}, x, g) =
         output = zeros(size(x))
         output[node.cache] = vcat(g...)
         tuple(output)
+    end
+
+maxpool(x::GraphNode, k::GraphNode) = BroadcastedOperator(maxpool, x, k)
+forward(node::BroadcastedOperator{typeof(maxpool)}, x, k) =
+    let
+        k1, k2 = k
+        h, w, c = size(x)
+        out_h = div(h, k1)
+        out_w = div(w, k2)
+        output = zeros(out_h, out_w, c)
+        indices = CartesianIndex{3}[]
+    
+        for i = 1:c
+            for j = 1:out_h
+                for l = 1:out_w
+                    # Define the pooling region
+                    region = @view x[(j-1)*k1+1:j*k1, (l-1)*k2+1:l*k2, i]
+                    value, ids = findmax(region)
+                    output[j, l, i] = value
+
+                    idx, idy = ids[1] + (j-1)*k1, ids[2] + (l-1)*k2
+                    push!(indices, CartesianIndex(idx, idy, i))
+                end
+            end
+        end
+    
+    node.cache = indices
+    return output
+    end
+backward(node::BroadcastedOperator{typeof(maxpool)}, x, k, g) =
+    let
+        output = zeros(size(x))
+        output[node.cache] = vcat(g...)
+        tuple(output, nothing)
     end
